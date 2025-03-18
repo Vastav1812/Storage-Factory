@@ -11,12 +11,12 @@ import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/shared/interf
  
 contract FundMe{
 
-    uint256 public minimumUSD = 50;
+    uint256 public minimumUSD = 50 * 1e18; // 1 * 10 ** 18
 
     function fund() public payable{
         // Want to be able to set a minimum fund amount in USD
         // 1. How do we send ETH to this contract?
-        require(msg.value >= minimumUSD, "Didn't send enough!"); // 1e18 == 1 * 10 ** 18 == 1000000000000000000
+        require(getConversionRate(msg.value) >= minimumUSD, "Didn't send enough!"); // 1e18 == 1 * 10 ** 18 == 1000000000000000000
         // 18 decimal places
         
     }
@@ -24,7 +24,7 @@ contract FundMe{
     function getPrice() public view returns(uint256){
         // ABI 
         // Address 0x1a81afB8146aeFfCFc5E50e8479e826E7D55b910
-        AggregatorV3Interface priceFeed = AggregatorV3Interface(0x1a81afB8146aeFfCFc5E50e8479e826E7D55b910);
+        AggregatorV3Interface priceFeed = AggregatorV3Interface(0x694AA1769357215DE4FAC081bf1f309aDC325306);
         (,int256 price,,,) = priceFeed.latestRoundData();
         // ETH in terms of USD
         /// 3000.00000000
@@ -34,6 +34,13 @@ contract FundMe{
     function getVersion() public view returns (uint256) {
         AggregatorV3Interface priceFeed = AggregatorV3Interface(0x1a81afB8146aeFfCFc5E50e8479e826E7D55b910);
         return priceFeed.version();
+    }
+
+    function getConversionRate(uint256 ethAmount) public view returns (uint256) {
+        uint256 ethPrice = getPrice();
+        return (ethPrice * ethAmount)/1e18;
+        // 3000_00000000000000000000
+        //1_00000000000000000000
     }
 
     // function withdraw(){}
